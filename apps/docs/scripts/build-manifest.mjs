@@ -11,6 +11,7 @@ const SITE_URL = 'https://optimus.openng.org';
 const SCHEMA_VERSION = 1;
 const LIB_DIR = path.resolve(__dirname, '../../../packages/optimus-ui');
 const API_DOC_PATH = path.resolve(__dirname, '../doc/apidoc/index.json');
+
 export const MANIFEST_PATH = path.resolve(__dirname, '../public/llms/manifest.json');
 
 // Names used in a docs page's `[apiDocs]` that differ from the exported names
@@ -42,6 +43,7 @@ export function buildManifest() {
     // Where each public name lives, so a docs page's `[apiDocs]` list can point at entry points
     const owners = new Map();
     const own = (name, entry, kind) => !owners.has(name) && owners.set(name, { entry: entry.name, import: entry.import, kind });
+
     for (const entry of entryPoints) {
         for (const d of entry.declarations ?? []) own(d.className, entry, d.kind);
         for (const name of entry.modules ?? []) own(name, entry, 'module');
@@ -56,12 +58,15 @@ export function buildManifest() {
         const linked = new Set();
         const related = [];
         const api = (page.apiComponents ?? []).flatMap((name) => API_NAME_ALIASES[name] ?? [name.replace(/-/g, '')]);
+
         for (const apiName of api) {
             const owner = owners.get(apiName);
+
             if (!owner) console.warn(`   Warning: ${page.name} documents ${apiName}, which no entry point exports`);
             else if (['component', 'directive', 'module'].includes(owner.kind)) linked.add(owner.entry);
             else related.push({ name: apiName, kind: owner.kind, import: owner.import });
         }
+
         if (linked.size === 0 && entryPoints.some((e) => e.name === page.name)) linked.add(page.name);
         // Related names from an entry point the page already documents are covered by it
         const relatedOutside = related.filter((r) => ![...linked].some((entry) => r.import.endsWith(`/${entry}`)));
@@ -83,6 +88,7 @@ export function buildManifest() {
     });
 
     const pageByEntry = new Map();
+
     for (const page of components) for (const entry of page.entryPoints ?? []) if (!pageByEntry.has(entry)) pageByEntry.set(entry, page.name);
 
     const guides = docs.guides.map((page) =>
@@ -109,6 +115,7 @@ export function buildManifest() {
 
 function toSection(section) {
     const examples = section.examples ? compact({ typescript: section.examples.typescript, data: section.examples.data, scss: section.examples.scss, command: section.examples.command }) : undefined;
+
     return compact({ id: section.id, label: section.label, description: section.description || undefined, examples: examples && Object.keys(examples).length ? examples : undefined });
 }
 
@@ -125,6 +132,7 @@ function main() {
     fs.writeFileSync(MANIFEST_PATH, JSON.stringify(manifest, null, 2), 'utf-8');
 
     const declarations = manifest.entryPoints.reduce((sum, e) => sum + (e.declarations?.length ?? 0), 0);
+
     console.log(`✓ Generated ${path.relative(process.cwd(), MANIFEST_PATH)}`);
     console.log(`   ${manifest.components.length} component pages, ${manifest.guides.length} guides`);
     console.log(`   ${manifest.entryPoints.length} entry points, ${declarations} components/directives`);

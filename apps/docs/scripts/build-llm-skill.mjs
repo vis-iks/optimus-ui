@@ -50,6 +50,7 @@ export function generateAgentSkill({ outputDir, wellKnownDir, manifest }) {
 
     const zip = createZip(files);
     const zipPath = path.join(outputDir, ZIP_NAME);
+
     fs.writeFileSync(zipPath, zip);
     console.log(`✓ Generated Agent Skill (${files.length} files): ${zipPath}`);
 
@@ -66,6 +67,7 @@ export function generateAgentSkill({ outputDir, wellKnownDir, manifest }) {
         ]
     };
     const indexPath = path.join(wellKnownDir, 'agent-skills', 'index.json');
+
     fs.mkdirSync(path.dirname(indexPath), { recursive: true });
     fs.writeFileSync(indexPath, JSON.stringify(index, null, 4) + '\n');
     console.log(`✓ Generated skills discovery index: ${indexPath}`);
@@ -149,6 +151,7 @@ function createZip(entries) {
         const crc = zlib.crc32(data);
 
         const local = Buffer.alloc(30);
+
         local.writeUInt32LE(0x04034b50, 0);
         local.writeUInt16LE(20, 4); // version needed
         local.writeUInt16LE(0x0800, 6); // UTF-8 names
@@ -162,6 +165,7 @@ function createZip(entries) {
         local.writeUInt16LE(0, 28);
 
         const central = Buffer.alloc(46);
+
         central.writeUInt32LE(0x02014b50, 0);
         central.writeUInt16LE(20, 4); // version made by
         central.writeUInt16LE(20, 6);
@@ -182,6 +186,7 @@ function createZip(entries) {
 
     const centralDir = Buffer.concat(centrals);
     const end = Buffer.alloc(22);
+
     end.writeUInt32LE(0x06054b50, 0);
     end.writeUInt16LE(entries.length, 8);
     end.writeUInt16LE(entries.length, 10);
